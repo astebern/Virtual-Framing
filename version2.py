@@ -33,7 +33,7 @@ class HandState:
 
 
 class VirtualFraming:
-    EFFECTS = ("None", "GaussianBlur", "B&W", "Canny")
+    EFFECTS = ("None", "GaussianBlur", "B&W", "Canny", "Pixelate", "Invert")
     FINGER_TIPS = (4, 8, 12, 16, 20)
     FINGER_LAYERS = (
         ((80, 255, 140), 0.28),
@@ -78,6 +78,10 @@ class VirtualFraming:
 
     def change_effect(self, step: int) -> None:
         self.effect_index = (self.effect_index + step) % len(self.EFFECTS)
+
+    def select_effect(self, index: int) -> None:
+        if 0 <= index < len(self.EFFECTS):
+            self.effect_index = index
 
     @staticmethod
     def pinch_threshold(frame_width: int, frame_height: int) -> float:
@@ -235,9 +239,19 @@ class VirtualFraming:
         if self.active_effect == "B&W":
             gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
             return cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-        threshold = int(40 + (1.0 - intensity) * 160)
-        edges = cv2.Canny(roi, threshold, min(255, threshold * 2))
-        return cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+        if self.active_effect == "Canny":
+            threshold = int(40 + (1.0 - intensity) * 160)
+            edges = cv2.Canny(roi, threshold, min(255, threshold * 2))
+            return cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+        if self.active_effect == "Pixelate":
+            height, width = roi.shape[:2]
+            block_size = int(3 + round(intensity * 22))
+            small_width = max(1, width // block_size)
+            small_height = max(1, height // block_size)
+            small = cv2.resize(roi, (small_width, small_height), interpolation=cv2.INTER_LINEAR)
+            return cv2.resize(small, (width, height), interpolation=cv2.INTER_NEAREST)
+        inverted = cv2.bitwise_not(roi)
+        return cv2.addWeighted(inverted, 0.35 + intensity * 0.65, roi, 0.65 - intensity * 0.65, 0)
 
     def draw_hand(self, frame: np.ndarray, state: HandState) -> None:
         for a, b in self.mp_hands.HAND_CONNECTIONS:
@@ -347,7 +361,7 @@ class VirtualFraming:
             cv2.LINE_AA,
         )
 
-        instruction = "Fist: Box Mode | Right Pinch: Next | Left Pinch: Prev | Index Touch: Mirror | C: Capture | O: Output | Q: Quit"
+        instruction = "0-5: Effect | Fist: Box Mode | Right Pinch: Next | Left Pinch: Prev | Index Touch: Mirror | C: Capture | O: Output | Q: Quit"
         font_scale = 0.52
         instruction_width = cv2.getTextSize(instruction, cv2.FONT_HERSHEY_SIMPLEX, font_scale, 1)[0][0]
         if instruction_width > width - 24:
@@ -494,6 +508,8 @@ class VirtualFraming:
                     elif key in (ord("o"), ord("O")) and now - self.last_output_mode_change > 0.3:
                         self.clean_output = not self.clean_output
                         self.last_output_mode_change = now
+                    elif ord("0") <= key <= ord("9") and not self.five_finger_box:
+                        self.select_effect(key - ord("0"))
                     if key in (ord("q"), ord("Q")):
                         break
         finally:

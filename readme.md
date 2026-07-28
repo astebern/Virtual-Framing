@@ -15,6 +15,7 @@ python version2.py --camera 0 --virtual-camera /dev/video20
 
 # Controls
 # Fist: toggle Dynamic Bounding Box mode between 2-finger and 5-finger
+# 0-5: select 2-finger effect directly
 # Right pinch: next effect
 # Left pinch: previous effect
 # Index fingers touch: toggle mirror
@@ -23,5 +24,5 @@ python version2.py --camera 0 --virtual-camera /dev/video20
 # Q: quit
 
 # Notes
-# Existing effects run only in 2-finger mode.
+# 2-finger effects: 0 None, 1 GaussianBlur, 2 B&W, 3 Canny, 4 Pixelate, 5 Invert.
 # 5-finger mode draws layered translucent color slices between matching fingertips.
