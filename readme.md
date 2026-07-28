@@ -26,3 +26,4 @@ python version2.py --camera 0 --virtual-camera /dev/video20
 # Notes
 # 2-finger effects: 0 None, 1 GaussianBlur, 2 B&W, 3 Canny, 4 Pixelate, 5 Invert.
 # 5-finger mode draws layered translucent color slices between matching fingertips.
+# Clean output shows effects only; debug output adds hand skeleton, labels, box, and text.

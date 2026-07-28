@@ -478,15 +478,14 @@ class VirtualFraming:
                     elif five_finger_polygon is not None:
                         self.draw_five_finger_region(effect_frame, five_finger_polygon)
 
-                    clean_frame = effect_frame.copy()
-                    for state in states:
-                        self.draw_hand(clean_frame, state)
-
-                    debug_frame = clean_frame.copy()
+                    clean_frame = effect_frame
+                    debug_frame = effect_frame.copy()
                     if active_box and not self.five_finger_box:
                         x1, y1, x2, y2 = active_box
                         cv2.rectangle(debug_frame, (x1, y1), (x2, y2), (0, 255, 255), 3)
 
+                    for state in states:
+                        self.draw_hand(debug_frame, state)
                     self.draw_keypoint_labels(debug_frame, states)
                     self.draw_overlay(debug_frame, active_box is not None)
 
